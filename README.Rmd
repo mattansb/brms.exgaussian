@@ -1,0 +1,149 @@
+---
+title: "README"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(brms)
+set.seed(20230110)
+```
+
+# Installation 
+
+You can install the `{brms.exgaussian}` from the `.zip` or `.tar.gz` files.
+
+```{r, eval=FALSE}
+install.packages("brms.exgaussian_0.0.2.zip") # on Windows
+
+install.packages("brms.exgaussian_0.0.2.tar.gz") # on Mac / Linux (unix)
+```
+
+(You will need to specify the **full path** to the files. E.g., `C:\\User\\Cool R Code\\brms.exgaussian_0.0.2.zip`.)
+
+# Demo
+
+This README demos `{brms.exgaussian}` with parameter recovery.
+
+```{r}
+library(brms)
+library(brms.exgaussian)
+```
+
+## Generate Data
+
+Using `retimes::rexgauss()` with standard Ex-Gauss parameterization. (Also available as `brms.exgaussian::rexgaussian2()`.)
+
+```{r}
+truth <- data.frame(
+  Group = 1:2,
+  mu = c(150, 180),
+  sigma = c(50, 70),
+  tau = c(200, 100)
+)
+
+g <- sample(1:2, size = 1000, replace = TRUE)
+
+d <- data.frame(
+  Group = factor(g),
+  rt = retimes::rexgauss(1000,
+    mu = truth$mu[g],
+    sigma = truth$sigma[g],
+    tau = truth$tau[g]
+  )
+)
+```
+
+
+## Fit `brms` Model
+
+Functions from `{brms.exgaussian}` for standard Ex-Gaussian distribution.
+
+```{r}
+exg_stanvars <- exgaussian2_stancode()
+exg_family <- exgaussian2()
+```
+
+Fit the model:
+
+```{r}
+fit <- brm(
+  bf(
+    rt ~ Group,
+    tau ~ Group,
+    sigma ~ Group
+  ),
+  data = d,
+  # brms.exgaussian additions
+  family = exg_family,
+  stanvars = exg_stanvars,
+  # Sampler
+  backend = "cmdstanr",
+  iter = 4000, warmup = 1000, refresh = 0,
+  cores = 4
+)
+```
+
+## Test Support Via Internal Functions
+
+```{r}
+loo(fit)
+waic(fit)
+
+posterior_epred(fit)[1:2, 1:2]
+
+posterior_predict(fit)[1:2, 1:2]
+```
+
+## Parameter Recovery
+
+### PP-Check
+
+```{r}
+pp_check(fit, group = "Group", type = "dens_overlay_grouped")
+```
+
+### Actual Parameters
+
+Recovered with `{brms.exgaussian}`:
+
+```{r}
+nd <- data.frame(Group = factor(1:2))
+
+mu <- posterior_linpred(fit,
+  newdata = nd,
+  dpar = "mu", transform = TRUE
+)
+sigma <- posterior_linpred(fit,
+  newdata = nd,
+  dpar = "sigma", transform = TRUE
+)
+tau <- posterior_linpred(fit,
+  newdata = nd,
+  dpar = "tau", transform = TRUE
+)
+
+
+nd$mu <- apply(mu, 2, mean)
+nd$sigma <- apply(sigma, 2, mean)
+nd$tau <- apply(tau, 2, mean)
+
+nd
+```
+
+Recovered with `{retimes}`:
+
+```{r}
+if (requireNamespace("retimes")) {
+  pars <- by(d$rt, d$Group, retimes::timefit)
+  pars <- lapply(pars, function(p) as.data.frame(as.list(p@par)))
+  cbind.data.frame(Group = 1:2, do.call("rbind", pars))
+}
+```
+
+Ground truth:
+
+```{r}
+truth
+```

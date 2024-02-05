@@ -1,0 +1,15 @@
+Type: Package
+Package: brms.exgaussian
+Title: Standard Parameterization of the Ex-Gaussian Distribution
+Version: 0.0.2
+Author: Mattan S. Ben-Shachar
+Maintainer: Mattan S. Ben-Shachar <mattansb@msbstats.info>
+Description: Functions to use the standard parameterization of the Ex-Gaussian distribution in brms.
+Depends:
+    R (>= 4.0.0)
+Imports:
+    brms (>= 2.18.0)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
