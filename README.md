@@ -1,40 +1,32 @@
----
-title: "README"
-output: github_document
----
+README
+================
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
-
-library(brms)
-set.seed(20230110)
-```
-
-# Installation 
+# Installation
 
 You can install the `{brms.exgaussian}` from GitHub:
 
-```{r}
+``` r
 remotes::install_github("mattansb/brms.exgaussian")
 ```
 
-(You will need to specify the **full path** to the files. E.g., `C:\\User\\Cool R Code\\brms.exgaussian_0.0.2.zip`.)
+(You will need to specify the **full path** to the files. E.g.,
+`C:\\User\\Cool R Code\\brms.exgaussian_0.0.2.zip`.)
 
 # Demo
 
 This README demos `{brms.exgaussian}` with parameter recovery.
 
-```{r}
+``` r
 library(brms)
 library(brms.exgaussian)
 ```
 
 ## Generate Data
 
-Using `retimes::rexgauss()` with standard Ex-Gauss parameterization. 
+Using `retimes::rexgauss()` with standard Ex-Gauss parameterization.
 (Also available as `brms.exgaussian::rexgaussian2()`.)
 
-```{r}
+``` r
 truth <- data.frame(
   Group = 1:2,
   mu = c(150, 180),
@@ -54,19 +46,19 @@ d <- data.frame(
 )
 ```
 
-
 ## Fit `brms` Model
 
-Functions from `{brms.exgaussian}` for standard Ex-Gaussian distribution.
+Functions from `{brms.exgaussian}` for standard Ex-Gaussian
+distribution.
 
-```{r}
+``` r
 exg_stanvars <- exgaussian2_stancode()
 exg_family <- exgaussian2()
 ```
 
 Fit the model:
 
-```{r}
+``` r
 fit <- brm(
   bf(
     rt ~ Group,
@@ -83,9 +75,9 @@ fit <- brm(
 
 ## Support Via Internal Functions
 
-These all work...
+These all work…
 
-```{r}
+``` r
 loo(fit)
 waic(fit)
 bridgesampling::bridge_sampler(fit)
@@ -99,7 +91,7 @@ posterior_predict(fit)
 
 ### PP-Check
 
-```{r}
+``` r
 pp_check(fit, group = "Group", type = "dens_overlay_grouped")
 ```
 
@@ -109,7 +101,7 @@ pp_check(fit, group = "Group", type = "dens_overlay_grouped")
 
 Recovered with `{brms.exgaussian}`:
 
-```{r}
+``` r
 nd <- data.frame(Group = factor(1:2))
 
 mu <- posterior_linpred(fit,
@@ -142,7 +134,7 @@ nd
 
 Recovered with `{retimes}`:
 
-```{r}
+``` r
 cbind.data.frame(
   Group = 1:2, 
   by(d$rt, d$Group, retimes::timefit) |> 
@@ -156,7 +148,7 @@ cbind.data.frame(
 
 Ground truth:
 
-```{r}
+``` r
 truth
 #>   Group  mu sigma tau
 #> 1     1 150    50 200
